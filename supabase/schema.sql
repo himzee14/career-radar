@@ -4,24 +4,6 @@
 create extension if not exists "pgcrypto";
 
 -- ---------------------------------------------------------------------------
--- Ownership: this app is single-user. Every table's RLS policy checks
--- against the one row in app_owner rather than hardcoding a UUID inline,
--- so you never have to edit policy SQL after signing up.
---
--- AFTER you complete your first magic-link sign-in (see SETUP.md), find
--- your user id in Authentication > Users in the Supabase dashboard, then
--- run, in the SQL Editor:
---   insert into app_owner (id) values ('paste-your-user-id-here');
--- ---------------------------------------------------------------------------
-create table app_owner (
-  id uuid primary key
-);
-
-create or replace function is_owner() returns boolean as $$
-  select exists (select 1 from app_owner where id = auth.uid());
-$$ language sql security definer stable set search_path = public;
-
--- ---------------------------------------------------------------------------
 -- companies
 -- ---------------------------------------------------------------------------
 create table companies (
@@ -145,24 +127,20 @@ before update on jobs
 for each row execute function log_job_status_change();
 
 -- ---------------------------------------------------------------------------
--- Row Level Security — every table is locked to the single owner
+-- Row Level Security
+--
+-- This app has no login — the Next.js server uses the Supabase service
+-- role key (server-only, never sent to the browser), which bypasses RLS
+-- entirely by design. Enabling RLS here with zero policies is a backstop:
+-- it means the public anon key — even if it ever leaked out of a browser
+-- devtools panel — cannot read or write anything, because no policy grants
+-- it access. There is nothing further to configure.
 -- ---------------------------------------------------------------------------
-alter table app_owner enable row level security;
 alter table companies enable row level security;
 alter table sources enable row level security;
 alter table jobs enable row level security;
 alter table search_profiles enable row level security;
 alter table job_history enable row level security;
-
--- app_owner is never readable or writable through the API — only from the
--- Supabase SQL Editor, which connects as an elevated role that bypasses RLS.
-create policy "no api access" on app_owner for all using (false);
-
-create policy "owner full access" on companies for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on sources for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on jobs for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on search_profiles for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on job_history for all using (is_owner()) with check (is_owner());
 
 -- ---------------------------------------------------------------------------
 -- Seed: your primary search profile, pre-filled from your brief

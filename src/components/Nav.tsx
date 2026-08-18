@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { createClient } from "@/lib/supabase/client";
 
 const LINKS = [
   { href: "/", label: "Dashboard" },
@@ -19,13 +18,6 @@ const LINKS = [
 
 export function Nav() {
   const pathname = usePathname();
-  const router = useRouter();
-
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-  }
 
   return (
     <nav className="w-[220px] shrink-0 bg-ink-900 text-white h-screen flex flex-col p-5">
@@ -52,10 +44,6 @@ export function Nav() {
           );
         })}
       </ul>
-
-      <button onClick={signOut} className="text-left text-[12px] text-ink-300 hover:text-white px-3 py-2">
-        Sign out
-      </button>
     </nav>
   );
 }

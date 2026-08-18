@@ -41,11 +41,18 @@ produce it.
 - The app never auto-applies, auto-submits forms, messages recruiters, or
   scrapes an authenticated session. "View job" always opens the original
   URL in a new tab; you apply yourself.
-- There is no Supabase **service role** key anywhere in this codebase.
-  Every request goes through the anon key and is enforced by Postgres Row
-  Level Security policies scoped to a single owner (`supabase/schema.sql`).
-- The dashboard sits behind Supabase magic-link email authentication —
-  there's no password to leak.
+- **There is no login.** This is a deliberate simplification for a
+  single-user tool. The trade-off: anyone with your Vercel URL can view
+  and edit your job pipeline — there is no username/password wall. Don't
+  share the URL, and don't link to it publicly.
+- The server uses the Supabase **service role** key to read and write data,
+  which bypasses Row Level Security by design (there's no login session for
+  RLS to check against). That key only ever lives in Vercel's environment
+  variables and `.env.local` — never in a `NEXT_PUBLIC_`-prefixed variable,
+  never in any client component, never committed to git. Row Level Security
+  stays enabled on every table with no policies, so if the separate,
+  less-powerful anon key were ever exposed, it still couldn't read or write
+  anything.
 
 ## Tech stack
 
@@ -57,18 +64,18 @@ Auth) · deployed on Vercel.
 ```
 src/
   app/
-    login/                   magic-link sign-in
-    auth/callback/            session exchange
-    (dashboard)/              everything behind auth
+    (dashboard)/              all pages
       page.tsx                 dashboard
       new/ shortlisted/ applied/ interviews/ all/   pipeline views
       companies/                company directory
       settings/                 search profile editor
       import/                   JSON / URL import
-    api/jobs/
-      import/                   ingestion + dedup
-      [id]/status/               pipeline status updates
-      [id]/note/                 notes
+    api/
+      jobs/
+        import/                   ingestion + dedup
+        [id]/status/               pipeline status updates
+        [id]/note/                 notes
+      settings/                    search profile updates
   components/                    JobCard, FitScoreBadge, JobDetailDrawer, ...
   lib/
     types.ts                     shared types
@@ -76,8 +83,8 @@ src/
     dedup.ts                      title/company normalization, content hash
     queries.ts                    Supabase query builder with filters
     format.ts                     salary/date/location formatting
-    supabase/                     client, server, and middleware helpers
-supabase/schema.sql               full schema, RLS policies, seed profile
+    supabase/server.ts             service-role client (server-only)
+supabase/schema.sql               full schema, RLS backstop, seed profile
 ```
 
 ## Running locally (optional — only if you want to make code changes)

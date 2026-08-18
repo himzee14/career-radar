@@ -6,7 +6,7 @@ import type { Job } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export default async function ShortlistedPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const jobs = await getJobs(supabase, { status: "shortlisted" });
 
   return (

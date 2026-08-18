@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import type { SearchProfile } from "@/lib/types";
 
 function toLines(values: string[]): string {
@@ -34,10 +33,11 @@ export function SettingsForm({ profile }: { profile: SearchProfile }) {
     e.preventDefault();
     setSaving(true);
     setSaved(false);
-    const supabase = createClient();
-    await supabase
-      .from("search_profiles")
-      .update({
+    await fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: profile.id,
         locations: fromLines(locations),
         role_families: fromLines(roleFamilies),
         avoid_terms: fromLines(avoidTerms),
@@ -49,8 +49,8 @@ export function SettingsForm({ profile }: { profile: SearchProfile }) {
           hard_floor: hardFloor,
         },
         scoring_weights: weights,
-      })
-      .eq("id", profile.id);
+      }),
+    });
     setSaving(false);
     setSaved(true);
     router.refresh();

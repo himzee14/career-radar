@@ -18,7 +18,7 @@ function topGroups(jobs: Job[], key: "location_country" | "company_name_raw", li
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const counts = await getDashboardCounts(supabase);
   const active = await getJobs(supabase, { status: ["new", "reviewing", "shortlisted"] });
   const topMatches = [...active].sort((a, b) => (b.fit_score ?? 0) - (a.fit_score ?? 0)).slice(0, 5);

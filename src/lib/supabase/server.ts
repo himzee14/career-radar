@@ -1,34 +1,17 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Server-side Supabase client bound to the current request's cookies.
- * Uses the anon key — access is enforced by Row Level Security, not by
- * trusting this client. Never import the service role key into any file
- * that ships to the browser.
+ * Server-only Supabase client. Uses the service role key, which bypasses
+ * Row Level Security entirely — that's intentional here: this app has no
+ * login, so there's no user session for RLS to check against. Protection
+ * instead relies on this key never reaching the browser (no NEXT_PUBLIC_
+ * prefix, only ever imported from server components and route handlers)
+ * and on RLS still denying the anon key by default as a backstop.
+ *
+ * Never import this file from a "use client" component.
  */
-export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Called from a Server Component render — safe to ignore because
-            // middleware refreshes the session on every request anyway.
-          }
-        },
-      },
-    }
-  );
+export function createClient() {
+  return createSupabaseClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false },
+  });
 }

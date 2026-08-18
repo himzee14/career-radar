@@ -10,7 +10,7 @@ const TIER_LABEL: Record<string, string> = {
 };
 
 export default async function CompaniesPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: companies } = await supabase
     .from("companies")
     .select("id, name, quality_tier, is_target_company, country, notes")

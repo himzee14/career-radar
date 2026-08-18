@@ -5,11 +5,7 @@ import { normalizeTitle, normalizeCompany, contentHash } from "@/lib/dedup";
 import { fitCategoryFromScore } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) {
-    return NextResponse.json({ message: "Not signed in." }, { status: 401 });
-  }
+  const supabase = createClient();
 
   let body: unknown;
   try {

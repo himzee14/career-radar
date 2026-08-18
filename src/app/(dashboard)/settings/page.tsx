@@ -5,7 +5,7 @@ import type { SearchProfile } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: profile } = await supabase.from("search_profiles").select("*").limit(1).single();
 
   return (

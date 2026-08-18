@@ -4,11 +4,7 @@ import type { JobNote } from "@/lib/types";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) {
-    return NextResponse.json({ message: "Not signed in." }, { status: 401 });
-  }
+  const supabase = createClient();
 
   const body = await request.json().catch(() => null);
   const text = body?.text?.trim();

@@ -13,7 +13,7 @@ export default async function AllJobsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const filters: JobFilters = {
     location: params.location,
